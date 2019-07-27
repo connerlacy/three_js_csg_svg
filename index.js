@@ -19,9 +19,7 @@ var bspResult, meshResult;
 
 var mesh_positives = [];
 var mesh_negatives = [];
-var bsp_positives  = [];
-var bsp_negatives  = [];
-var mesh_results = [];
+
 
 var scene, camera;
 var orbitcontrols;
@@ -34,7 +32,7 @@ var renderer;
 var boxes = [];
 var lines = [];
 
-var num_positive = 1;
+var num_positive = 2;
 var num_negative = 1;
 var grid
 
@@ -43,6 +41,8 @@ var mult =2.5;
 var positive_size = 5;
 
 var box, sphere, cylinder, mat, results;
+
+
 
 function init()
 {
@@ -59,14 +59,28 @@ function init()
 
   //------------------------------------------------------------------
   box = new THREE.Mesh(new THREE.BoxGeometry(2,2,2),new THREE.MeshBasicMaterial({color:0x00ff00}));
-  scene.add(box)
+  //scene.add(box)
   sphere = new THREE.Mesh(new THREE.SphereGeometry(2,8,8),new THREE.MeshBasicMaterial({color:0x0000ff}));
-  scene.add(sphere);
+  //scene.add(sphere);
   cylinder = new THREE.Mesh( new THREE.CylinderGeometry( 1, 1, 4, 16 ), new THREE.MeshBasicMaterial({color:0xffff00}) );
-  scene.add( cylinder );
+  //scene.add( cylinder );
 
   mat = new THREE.MeshBasicMaterial({color:0, wireframe:true});
   results = [];
+
+  //------------------------------------------------------------------
+  for(var i=0; i < num_positive; i++)
+  {
+    mesh_positives[i] = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshBasicMaterial({color:0x00ff00, wireframe:true}));
+    mesh_positives[i].position.add( new THREE.Vector3(i*3,0,4));
+    //scene.add(mesh_positives[i]);
+  }
+
+  for(var i=0; i < num_negative; i++)
+  {
+    mesh_negatives[i] = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshBasicMaterial({color:0x0000ff}));
+    //scene.add(mesh_negatives[i]);
+  }
 }
 
 function render()
@@ -78,10 +92,16 @@ function render()
   sphere.position.x=Math.sin(global_time)*2;
   sphere.position.z=Math.cos(global_time)*0.5;
   sphere.position.t=Math.sin(global_time*-0.12)*0.5;
+
+  for(var i=0;i<mesh_negatives.length;i++)
+  {
+    mesh_negatives[i].rotation.z = Math.sin(global_time)*2.*(i+1);
+    mesh_negatives[i].rotation.y = Math.sin(global_time)*2.*(i+1);
+  }
+
   recompute();
 
   renderer.render(scene,camera);
-
 }
 
 function doCSG(a,b,op,mat)
@@ -96,34 +116,61 @@ function doCSG(a,b,op,mat)
 }
 
 function recompute(){
-    for(var i=0;i<results.length;i++){
+    for(var i=0;i<results.length;i++)
+    {
         var m = results[i]
         m.parent.remove(m)
         m.geometry.dispose();
     }
     results = [];
 
-    box.updateMatrix();
-    sphere.updateMatrix();
-    cylinder.updateMatrix();
+    for(var i=0;i<num_positive.length;i++)
+    {
+      mesh_positives[i].updateMatrix();
+    }
 
-    var c = doCSG(cylinder, sphere,'subtract',mat);
+    for(var i=0;i<num_negative.length;i++)
+    {
+      mesh_negatives[i].updateMatrix();
+    }
 
-    results.push(doCSG(c,box,'subtract',mat))
+    for(var i=0;i<mesh_positives.length;i++)
+    {
+      var r = mesh_positives[i];
 
-    results.push(doCSG(box,sphere,'intersect',mat))
-    results.push(doCSG(box,sphere,'union',mat))
+      for(var j=0;j<mesh_negatives.length;j++)
+      {
+          r.updateMatrix();
+          mesh_negatives[j].updateMatrix();
 
-    results.push(doCSG(sphere,box,'subtract',mat))
-    results.push(doCSG(sphere,box,'intersect',mat))
-    results.push(doCSG(sphere,box,'union',mat))
+          r = doCSG(r, mesh_negatives[j],'subtract', mat)
+      }
+
+      results.push(r)
+    }
+
+
+    // box.updateMatrix();
+    // sphere.updateMatrix();
+    // cylinder.updateMatrix();
+    //
+    // var c = doCSG(cylinder, sphere,'subtract',mat);
+    //
+    // results.push(doCSG(c,box,'subtract',mat))
+    //
+    // results.push(doCSG(box,sphere,'intersect',mat))
+    // results.push(doCSG(box,sphere,'union',mat))
+    //
+    // results.push(doCSG(sphere,box,'subtract',mat))
+    // results.push(doCSG(sphere,box,'intersect',mat))
+    // results.push(doCSG(sphere,box,'union',mat))
 
     for(var i=0;i<results.length;i++){
         var r = results[i];
         scene.add(r)
 
-        r.position.z += -5 + ((i%3)*5)
-        r.position.x += -5 + (((i/3)|0)*10)
+        // r.position.z += -5 + ((i%3)*5)
+        // r.position.x += -5 + (((i/3)|0)*10)
     }
 }
 
