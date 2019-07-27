@@ -1,0 +1,27 @@
+{
+  "name": "glslify-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "parcel index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "parcel-bundler": "^1.12.3",
+    "three": "^0.106.2"
+  },
+  "dependencies": {
+    "/Users/connerlacy/Desktop/glslify-test 3/CSGMesh.js": "^1.0.4",
+    "csg": "^1.0.1",
+    "dat.gui": "^0.7.6",
+    "examples": "^0.1.0",
+    "glsl-noise": "0.0.0",
+    "parcel-plugin-glslify": "^0.1.0",
+    "svg.js": "^2.7.1",
+    "three-orbitcontrols": "^2.102.2"
+  }
+}
