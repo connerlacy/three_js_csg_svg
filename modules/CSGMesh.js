@@ -40,17 +40,24 @@ class CSG {
     }
 
     subtract(csg) {
-        var a = new Node(this.clone().polygons);
-        var b = new Node(csg.clone().polygons);
-        a.invert();
-        a.clipTo(b);
-        b.clipTo(a);
-        b.invert();
-        b.clipTo(a);
-        b.invert();
-        a.build(b.allPolygons());
-        a.invert();
-        return CSG.fromPolygons(a.allPolygons());
+        var tp = this.clone().polygons;
+        var cp = csg.clone().polygons;
+        if(tp.length && cp.length)
+        {
+          var a = new Node(tp);
+          var b = new Node(cp);
+          a.invert();
+          a.clipTo(b);
+          b.clipTo(a);
+          b.invert();
+          b.clipTo(a);
+          b.invert();
+          a.build(b.allPolygons());
+          a.invert();
+          return CSG.fromPolygons(a.allPolygons());
+        }
+
+        return new CSG();
     }
 
     intersect(csg) {

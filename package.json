@@ -21,6 +21,7 @@
     "examples": "^0.1.0",
     "glsl-noise": "0.0.0",
     "parcel-plugin-glslify": "^0.1.0",
+    "simplex-noise": "^2.4.0",
     "svg.js": "^2.7.1",
     "three-orbitcontrols": "^2.102.2"
   }

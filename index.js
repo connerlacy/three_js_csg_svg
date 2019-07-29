@@ -12,6 +12,7 @@ import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js"
 import CSG from './modules/CSGMesh.js';
 import SVG from 'svg.js'
 import {Projector} from "three/examples/jsm/renderers/Projector.js"
+import Simplex from 'simplex-noise';
 
 var meshA, meshB;
 var bspA, bspB;
@@ -32,8 +33,8 @@ var renderer;
 var boxes = [];
 var lines = [];
 
-var num_positive = 2;
-var num_negative = 1;
+var num_positive = 10;
+var num_negative = 10;
 var grid
 
 //var svg_draw = SVG('svg_drawing').size(300, 300)
@@ -41,8 +42,7 @@ var mult =2.5;
 var positive_size = 5;
 
 var box, sphere, cylinder, mat, results;
-
-
+var generate = false;
 
 function init()
 {
@@ -57,29 +57,46 @@ function init()
 	document.body.appendChild( renderer.domElement );
   orbitcontrols = new THREE.OrbitControls(camera, renderer.domElement);
 
-  //------------------------------------------------------------------
-  box = new THREE.Mesh(new THREE.BoxGeometry(2,2,2),new THREE.MeshBasicMaterial({color:0x00ff00}));
-  //scene.add(box)
-  sphere = new THREE.Mesh(new THREE.SphereGeometry(2,8,8),new THREE.MeshBasicMaterial({color:0x0000ff}));
-  //scene.add(sphere);
-  cylinder = new THREE.Mesh( new THREE.CylinderGeometry( 1, 1, 4, 16 ), new THREE.MeshBasicMaterial({color:0xffff00}) );
-  //scene.add( cylinder );
-
   mat = new THREE.MeshBasicMaterial({color:0, wireframe:true});
   results = [];
 
   //------------------------------------------------------------------
   for(var i=0; i < num_positive; i++)
   {
-    mesh_positives[i] = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshBasicMaterial({color:0x00ff00, wireframe:true}));
-    mesh_positives[i].position.add( new THREE.Vector3(i*3,0,4));
+    //Boxes
+    let xLoc = (Math.random()+1)*(i*3)%10 - 8;
+    let yLoc = (Math.random()+1)*i*2%10 - 5;
+    let zLoc = (Math.random()+1)*i*3%10 - 8;
+
+    let xRot = (Math.random()+1)*(i*3)%10 - 8;
+    let yRot = (Math.random()+1)*(i*3)%10 - 8;
+    let zRot = (Math.random()+1)*(i*3)%10 - 8;
+
+    mesh_positives[i] = new THREE.Mesh(new THREE.BoxGeometry(3*(Math.random()+1),5,1), new THREE.MeshBasicMaterial({color:0xffffff*Math.random(), wireframe:true}));
+    mesh_positives[i].position.add( new THREE.Vector3(xLoc, yLoc, zLoc));
+    mesh_positives[i].rotation.x += xRot;//( new THREE.Vector3(xRot, yRot, zRot));
+    mesh_positives[i].rotation.y += yRot;
+    mesh_positives[i].rotation.z += zRot;
+
     //scene.add(mesh_positives[i]);
   }
 
   for(var i=0; i < num_negative; i++)
   {
-    mesh_negatives[i] = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshBasicMaterial({color:0x0000ff}));
+    let xLoc = (Math.random()+1)*(i*3)%10 - 8;
+    let yLoc = (Math.random()+1)*i*2%10 - 5;
+    let zLoc = (Math.random()+1)*i*3%10 - 8;
+    mesh_negatives[i] = new THREE.Mesh(new THREE.BoxGeometry(4,4,4), new THREE.MeshBasicMaterial({color:0xffffff*Math.random()}));
+    mesh_negatives[i].position.add( new THREE.Vector3(xLoc, yLoc, zLoc));
     //scene.add(mesh_negatives[i]);
+  }
+
+  document.onkeydown = function (e)
+  {
+    if (e.keyCode == 71) //g
+    {
+      generate = true;
+    }
   }
 }
 
@@ -88,20 +105,42 @@ function render()
   global_time += global_clock.getDelta();
   requestAnimationFrame(render);
 
-  cylinder.rotation.y += 0.01;
-  sphere.position.x=Math.sin(global_time)*2;
-  sphere.position.z=Math.cos(global_time)*0.5;
-  sphere.position.t=Math.sin(global_time*-0.12)*0.5;
+  //------------------------------------------------------------------
 
-  for(var i=0;i<mesh_negatives.length;i++)
+  if(generate)
   {
-    mesh_negatives[i].rotation.z = Math.sin(global_time)*2.*(i+1);
-    mesh_negatives[i].rotation.y = Math.sin(global_time)*2.*(i+1);
+    generate = false;
+    recompute();
   }
-
-  recompute();
+  //
 
   renderer.render(scene,camera);
+}
+
+function intersecting(obj1, obj2)
+{
+  // This function avoids artifacts
+  // in the face rendering
+  obj1.geometry.computeBoundingBox();
+  obj2.geometry.computeBoundingBox();
+
+  var bb1 = new THREE.Box3();
+  bb1.copy(obj1.geometry.boundingBox);
+  var bb2 = new THREE.Box3();
+  bb2.copy(obj2.geometry.boundingBox);
+
+  obj1.updateMatrixWorld(true);
+  bb1.applyMatrix4(obj1.matrixWorld);
+
+  obj2.updateMatrixWorld(true);
+  bb2.applyMatrix4(obj2.matrixWorld);
+
+  if (bb1.intersectsBox(bb2))
+  {
+    return true;
+  }
+
+  return false;
 }
 
 function doCSG(a,b,op,mat)
@@ -115,7 +154,8 @@ function doCSG(a,b,op,mat)
     return result;
 }
 
-function recompute(){
+function recompute()
+{
     for(var i=0;i<results.length;i++)
     {
         var m = results[i]
@@ -123,16 +163,6 @@ function recompute(){
         m.geometry.dispose();
     }
     results = [];
-
-    for(var i=0;i<num_positive.length;i++)
-    {
-      mesh_positives[i].updateMatrix();
-    }
-
-    for(var i=0;i<num_negative.length;i++)
-    {
-      mesh_negatives[i].updateMatrix();
-    }
 
     for(var i=0;i<mesh_positives.length;i++)
     {
@@ -143,39 +173,20 @@ function recompute(){
           r.updateMatrix();
           mesh_negatives[j].updateMatrix();
 
-          r = doCSG(r, mesh_negatives[j],'subtract', mat)
+          if(intersecting(r,mesh_negatives[j]))
+          {
+            r = doCSG(r, mesh_negatives[j],'subtract', mat)
+          }
       }
 
       results.push(r)
     }
 
-
-    // box.updateMatrix();
-    // sphere.updateMatrix();
-    // cylinder.updateMatrix();
-    //
-    // var c = doCSG(cylinder, sphere,'subtract',mat);
-    //
-    // results.push(doCSG(c,box,'subtract',mat))
-    //
-    // results.push(doCSG(box,sphere,'intersect',mat))
-    // results.push(doCSG(box,sphere,'union',mat))
-    //
-    // results.push(doCSG(sphere,box,'subtract',mat))
-    // results.push(doCSG(sphere,box,'intersect',mat))
-    // results.push(doCSG(sphere,box,'union',mat))
-
     for(var i=0;i<results.length;i++){
         var r = results[i];
         scene.add(r)
-
-        // r.position.z += -5 + ((i%3)*5)
-        // r.position.x += -5 + (((i/3)|0)*10)
     }
 }
 
 init();
-
-
-
 render();
