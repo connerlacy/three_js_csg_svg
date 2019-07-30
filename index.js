@@ -43,6 +43,7 @@ var positive_size = 5;
 
 var box, sphere, cylinder, mat, results;
 var generate = false;
+var newDom = false;
 
 function init()
 {
@@ -60,42 +61,18 @@ function init()
   mat = new THREE.MeshBasicMaterial({color:0, wireframe:true});
   results = [];
 
-  //------------------------------------------------------------------
-  for(var i=0; i < num_positive; i++)
-  {
-    //Boxes
-    let xLoc = (Math.random()+1)*(i*3)%10 - 8;
-    let yLoc = (Math.random()+1)*i*2%10 - 5;
-    let zLoc = (Math.random()+1)*i*3%10 - 8;
-
-    let xRot = (Math.random()+1)*(i*3)%10 - 8;
-    let yRot = (Math.random()+1)*(i*3)%10 - 8;
-    let zRot = (Math.random()+1)*(i*3)%10 - 8;
-
-    mesh_positives[i] = new THREE.Mesh(new THREE.BoxGeometry(3*(Math.random()+1),5,1), new THREE.MeshBasicMaterial({color:0xffffff*Math.random(), wireframe:true}));
-    mesh_positives[i].position.add( new THREE.Vector3(xLoc, yLoc, zLoc));
-    mesh_positives[i].rotation.x += xRot;//( new THREE.Vector3(xRot, yRot, zRot));
-    mesh_positives[i].rotation.y += yRot;
-    mesh_positives[i].rotation.z += zRot;
-
-    //scene.add(mesh_positives[i]);
-  }
-
-  for(var i=0; i < num_negative; i++)
-  {
-    let xLoc = (Math.random()+1)*(i*3)%10 - 8;
-    let yLoc = (Math.random()+1)*i*2%10 - 5;
-    let zLoc = (Math.random()+1)*i*3%10 - 8;
-    mesh_negatives[i] = new THREE.Mesh(new THREE.BoxGeometry(4,4,4), new THREE.MeshBasicMaterial({color:0xffffff*Math.random()}));
-    mesh_negatives[i].position.add( new THREE.Vector3(xLoc, yLoc, zLoc));
-    //scene.add(mesh_negatives[i]);
-  }
-
   document.onkeydown = function (e)
   {
-    if (e.keyCode == 71) //g
+    switch(e.keyCode)
     {
-      generate = true;
+      case 71:
+        generate = true;
+        break;
+      case 84:
+        newDom = true;
+        break;
+      default:
+        break;
     }
   }
 }
@@ -110,11 +87,17 @@ function render()
   if(generate)
   {
     generate = false;
+    gen_geometry();
     recompute();
   }
-  //
 
   renderer.render(scene,camera);
+
+  if(newDom)
+  {
+    newDom = false;
+    console.log(renderer.domElement);
+  }
 }
 
 function intersecting(obj1, obj2)
@@ -186,6 +169,43 @@ function recompute()
         var r = results[i];
         scene.add(r)
     }
+}
+
+function gen_geometry()
+{
+  //------------------------------------------------------------------
+  mesh_positives = [];
+  mesh_negatives = [];
+  for(var i=0; i < num_positive; i++)
+  {
+    //Boxes
+    let xLoc = (Math.random()+1)*(i*3)%10 - 8;
+    let yLoc = (Math.random()+1)*i*2%10 - 5;
+    let zLoc = (Math.random()+1)*i*3%10 - 8;
+
+    let xRot = (Math.random()+1)*(i*3)%10 - 8;
+    let yRot = (Math.random()+1)*(i*3)%10 - 8;
+    let zRot = (Math.random()+1)*(i*3)%10 - 8;
+
+    mesh_positives[i] = new THREE.Mesh(new THREE.BoxGeometry(3*(Math.random()+1),5,1), new THREE.MeshBasicMaterial({color:0xffffff*Math.random(), wireframe:true}));
+    mesh_positives[i].position.add( new THREE.Vector3(xLoc, yLoc, zLoc));
+    mesh_positives[i].rotation.x += xRot;//( new THREE.Vector3(xRot, yRot, zRot));
+    mesh_positives[i].rotation.y += yRot;
+    mesh_positives[i].rotation.z += zRot;
+
+    //scene.add(mesh_positives[i]);
+  }
+
+  for(var i=0; i < num_negative; i++)
+  {
+    let xLoc = (Math.random()+1)*(i*3)%10 - 8;
+    let yLoc = (Math.random()+1)*i*2%10 - 5;
+    let zLoc = (Math.random()+1)*i*3%10 - 8;
+    mesh_negatives[i] = new THREE.Mesh(new THREE.BoxGeometry(4,4,4), new THREE.MeshBasicMaterial({color:0xffffff*Math.random()}));
+    mesh_negatives[i].position.add( new THREE.Vector3(xLoc, yLoc, zLoc));
+    //scene.add(mesh_negatives[i]);
+  }
+
 }
 
 init();
