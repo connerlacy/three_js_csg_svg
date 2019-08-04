@@ -13,6 +13,7 @@ import CSG from './modules/CSGMesh.js';
 import SVG from 'svg.js'
 import {Projector} from "three/examples/jsm/renderers/Projector.js"
 import Simplex from 'simplex-noise';
+import Snap from 'snapsvg/dist/snap.svg-min.js'
 
 var meshA, meshB;
 var bspA, bspB;
@@ -33,8 +34,8 @@ var renderer;
 var boxes = [];
 var lines = [];
 
-var num_positive = 10;
-var num_negative = 10;
+var num_positive = 5;
+var num_negative = 5;
 var grid
 
 //var svg_draw = SVG('svg_drawing').size(300, 300)
@@ -45,16 +46,25 @@ var box, sphere, cylinder, mat, results;
 var generate = false;
 var newDom = false;
 
+var paths = [];
+
+var svg_draw = SVG('svg_drawing').size(300, 300)
+
+var snap = Snap(500,500);
+// Lets create big circle in the middle:
+var bigCircle = snap.circle(150, 150, 100);
+// By default its black, lets change its attributes
+
 function init()
 {
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(60,window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
   camera.position.z = 10;
   renderer = new SVGRenderer();
-	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.setSize( 300, 300 );
   renderer.setClearColor({color:0xffff00, alpha:0.1});
 	//renderer.setQuality( 'low' );
-  renderer.domElement.id = "renderer";
+  //renderer.domElement.id = "renderer";
 	document.body.appendChild( renderer.domElement );
   orbitcontrols = new THREE.OrbitControls(camera, renderer.domElement);
 
@@ -96,7 +106,63 @@ function render()
   if(newDom)
   {
     newDom = false;
-    console.log(renderer.domElement);
+    //console.log(renderer.domElement);
+    //console.log(document.getElementsByTagName('path'));
+    paths = [];
+
+    var ps = document.getElementsByTagName('path');
+    //var path = svg_draw.svg(renderer.domElement.innerHTML);
+    //path.move(500,0);
+    //path.fill('black').move(20, 20)
+    //svg_draw.svg(renderer.domElement.innerHTML);
+    //console.log(renderer.domElement.innerHTML)
+    //console.log(ps);
+    var p_str_abs = [];
+
+    //console.log();
+    for(var i =0;i<ps.length;i++)
+    {
+
+        var p_str = ps[i].getAttribute("d");
+        p_str_abs.push(Snap.path.toAbsolute(p_str));
+        console.log(p_str);
+        var temp = "";
+        for(var j=0; j < p_str.length; j++)
+        {
+          switch(p_str[j])
+          {
+            case 'z':
+              temp += ' z';
+              paths.push(temp);
+              temp = "";
+              break;
+            case ',':
+              temp += ' ';
+              break;
+            case 'L':
+              temp += ' L ';
+              break;
+            case 'M':
+              temp += 'M ';
+              break;
+            default:
+              temp += p_str[j];
+              break;
+          }
+        }
+    }
+
+    // console.log("paths_stored");
+    //
+    for(var i=0;i<paths.length;i++)
+    {
+      console.log(i + " " + paths[i]);
+      var p = snap.path(paths[i]);
+      //p.fill('blue').move(20, 20)
+      var r = Math.floor(Math.random()*999).toString();
+      console.log(r);
+      p.attr({ fill: "#"+r , stroke: 'black', strokeWidth: 1 });
+    }
   }
 }
 
