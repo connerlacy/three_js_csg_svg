@@ -22,7 +22,6 @@ var bspResult, meshResult;
 var mesh_positives = [];
 var mesh_negatives = [];
 
-
 var scene, camera;
 var orbitcontrols;
 
@@ -34,8 +33,8 @@ var renderer;
 var boxes = [];
 var lines = [];
 
-var num_positive = 5;
-var num_negative = 5;
+var num_positive = 7;
+var num_negative = 10;
 var grid
 
 //var svg_draw = SVG('svg_drawing').size(300, 300)
@@ -48,11 +47,9 @@ var newDom = false;
 
 var paths = [];
 
-var svg_draw = SVG('svg_drawing').size(300, 300)
-
 var snap = Snap(500,500);
 // Lets create big circle in the middle:
-var bigCircle = snap.circle(150, 150, 100);
+//var bigCircle = snap.circle(150, 150, 100);
 // By default its black, lets change its attributes
 
 function init()
@@ -61,7 +58,7 @@ function init()
   camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
   camera.position.z = 10;
   renderer = new SVGRenderer();
-	renderer.setSize( 300, 300 );
+	renderer.setSize( 500, 500 );
   renderer.setClearColor({color:0xffff00, alpha:0.1});
 	//renderer.setQuality( 'low' );
   //renderer.domElement.id = "renderer";
@@ -111,21 +108,12 @@ function render()
     paths = [];
 
     var ps = document.getElementsByTagName('path');
-    //var path = svg_draw.svg(renderer.domElement.innerHTML);
-    //path.move(500,0);
-    //path.fill('black').move(20, 20)
-    //svg_draw.svg(renderer.domElement.innerHTML);
-    //console.log(renderer.domElement.innerHTML)
-    //console.log(ps);
     var p_str_abs = [];
 
     //console.log();
     for(var i =0;i<ps.length;i++)
     {
-
         var p_str = ps[i].getAttribute("d");
-        p_str_abs.push(Snap.path.toAbsolute(p_str));
-        console.log(p_str);
         var temp = "";
         for(var j=0; j < p_str.length; j++)
         {
@@ -151,17 +139,31 @@ function render()
           }
         }
     }
+    var range = 250;
 
-    // console.log("paths_stored");
-    //
     for(var i=0;i<paths.length;i++)
     {
-      console.log(i + " " + paths[i]);
+      //console.log(i + " " + paths[i]);
       var p = snap.path(paths[i]);
-      //p.fill('blue').move(20, 20)
-      var r = Math.floor(Math.random()*999).toString();
-      console.log(r);
-      p.attr({ fill: "#"+r , stroke: 'black', strokeWidth: 1 });
+      p.transform("t250,250");
+      var r = Math.floor(Math.random()*range + (255 - range)).toString();
+      var g = Math.floor(Math.random()*range + (255 - range)).toString();
+      var b = Math.floor(Math.random()*range + (255 - range)).toString();
+      var rgb = "rgb(" + r + "," + g + "," + b+")";
+
+      //------------------------------------------------------------------------
+      // Now lets create pattern
+      var pat = snap.path("M10-5-10,15M15,0,0,15M0-5-20,15").attr({
+              fill: "blue",
+              stroke: rgb,
+              strokeWidth: (Math.random()*10.0)
+          });
+
+      // To create pattern,
+      // just specify dimensions in pattern method:
+      pat = pat.pattern(Math.floor(Math.random()*10), Math.floor(Math.random()*10), Math.floor(Math.random()*20), Math.floor(Math.random()*10));
+      //p.attr({ fill: "rgb(" + r + "," + g + "," + b+")", stroke: 'black', strokeWidth: 1 });
+      p.attr({fill:pat, stroke:rgb, strokeWidth: (Math.random()*1.0)});
     }
   }
 }
